@@ -15,23 +15,13 @@ object Part1 extends App {
         println(values(0) * values(1))
 
     def valuesThatSumTo(values: List[Int], target: Int): List[Int] = {
-        // Create a hashmap from value -> index 
-        val index = values
-            .zipWithIndex
-            .foldLeft(HashMap[Int, Int]())({
-                case (curr, (value, count)) => curr + (value -> count)
-            })
+        val valueSet = values.toSet
 
         // Find all the elements that have target - elem in the hashmap
-        // (where the element in the map is not itself)
         values
-            .zipWithIndex
-            .filter({
-                case (elem, elemIndex) => {
-                    val delta = target - elem
-                    index.contains(delta) && index(delta) != elemIndex
-                }
+            .filter(elem => {
+                val delta = target - elem
+                valueSet.contains(delta)
             })
-            .map(t => t._1)
     }
 }
