@@ -24,38 +24,28 @@ case class PasswordRule(ruleLetter: Char, i1: Int, i2: Int) {
 
 object PasswordRule {
     def fromString(s: String): Either[ParseError, PasswordRule] = {
-        val parts = if(s.split(" ").length == 2)
-            Right(s.split(" "))
-        else
-            Left(ParseError("Could not break password rule on space"))
-
-        val rangeStr = parts.map(parts => parts(0))
-        val ruleLetter = parts.map(parts => parts(1).toCharArray.head)
-
-        val rangeParts = rangeStr.flatMap(rangeStr => {
-            if (rangeStr.split("-").length == 2)
-                Right(rangeStr.split("-"))
-            else
-                Left(ParseError("Range should be separated by '-'"))
-        })
-
-        val i1 = rangeParts.flatMap(rangeParts => {
-            Try(rangeParts(0).toInt) match {
-                case Failure(exception) => return Left(ParseError("lower range bound must be an int"))
-                case Success(value) => Right(value)
-            }
-        })
-        val i2 = rangeParts.flatMap(rangeParts => {
-            Try(rangeParts(1).toInt) match {
-                case Failure(exception) => return Left(ParseError("uppser range bound must be an int"))
-                case Success(value) => Right(value)
-            }
-        })
-
         for {
-            ruleLetter <- ruleLetter
-            i1 <- i1
-            i2 <- i2
+            parts <- s.split(" ") match {
+                case Array(a, b) => Right((a, b))
+                case _ => Left(ParseError("Could not break password rule on space"))
+            }
+            ruleLetter <- Right(parts._2.toCharArray().head)
+            rangeParts <- parts._1.split("-") match {
+                case Array(a, b) => Right((a, b))
+                case _ => Left(ParseError("Range must be separated with '-'"))
+            }
+            i1 <- {
+                Try(rangeParts._1.toInt) match {
+                    case Failure(exception) => return Left(ParseError("lower range bound must be an int"))
+                    case Success(value) => Right(value)
+                }
+            }
+            i2 <- {
+                Try(rangeParts._2.toInt) match {
+                    case Failure(exception) => return Left(ParseError("upper range bound must be an int"))
+                    case Success(value) => Right(value)
+                }
+            }
         } yield PasswordRule(ruleLetter, i1, i2)
     }
 }
@@ -84,17 +74,13 @@ object Part2 extends App {
         }
     }
     def parsePasswordDbRecord(record: String): Either[ParseError, (PasswordRule, String)] = {
-        val parts = if (record.split(":").length == 2)
-            Right(record.split(":"))
-        else
-            Left(ParseError("Could not split password record on ':'"))
-
-        val passwordRule = parts.flatMap(parts => PasswordRule.fromString(parts(0)))
-        val password = parts.map(parts => parts(1).trim)
-
         for {
-            passwordRule <- passwordRule
-            password <- password
+            parts <- record.split(":") match {
+                case Array(a, b) => Right((a, b))
+                case _ => Left(ParseError("Could not split password record on ':'"))
+            }
+            passwordRule <- PasswordRule.fromString(parts._1)
+            password <- Right(parts._2.trim)
         } yield (passwordRule, password)
     }
 }
