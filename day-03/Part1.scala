@@ -23,18 +23,17 @@ object Part1 extends App {
         val width = map(0).length
         val height = map.length
 
-        var x = 0
-        var y = 0
-        var numTrees = 0
+        def count(x: Int, y: Int, numTrees: Int): Int = {
+            val nextNumTrees = if (map(y)(x)) numTrees + 1 else numTrees
+            val nextX = (x + slope._1) % width
+            val nextY = y + slope._2
 
-        do {
-            if (map(y)(x)) {
-                numTrees += 1
-            }
-            x = (x + slope._1) % width
-            y = y + slope._2
-        } while (y < height) 
+            if (nextY < height)
+                count(nextX, nextY, nextNumTrees)
+            else
+                nextNumTrees
+        }
 
-        return numTrees
+        count(0, 0, 0)
     }
 }
